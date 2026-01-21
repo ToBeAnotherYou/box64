@@ -23,7 +23,8 @@ jobs:
           cmake -B build \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DARM_DYNAREC=ON \
-                -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc
+                -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+                -DCMAKE_EXE_LINKER_FLAGS="-static -s"
           cmake --build build -j$(nproc)
 
       - name: Upload artifact
