@@ -1,0 +1,33 @@
+# .github/workflows/arm64.yml
+name: Build Box64 ARM64
+
+on:
+  workflow_dispatch:          # 手动触发
+  push:
+    branches: [ main ]        # 推送即触发
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04-arm   # GitHub 公测 ARM 运行器
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y cmake gcc-aarch64-linux-gnu git
+
+      - name: Build
+        run: |
+          cmake -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DARM_DYNAREC=ON \
+                -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc
+          cmake --build build -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: box64-linux-arm64
+          path: build/box64
