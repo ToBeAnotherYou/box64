@@ -1,14 +1,14 @@
 # .github/workflows/arm64.yml
-name: Build Box64 ARM64
+name: Build Box64 ARM64-static
 
 on:
-  workflow_dispatch:          # 手动触发
+  workflow_dispatch:
   push:
-    branches: [ main ]        # 推送即触发
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04-arm   # GitHub 公测 ARM 运行器
+    runs-on: ubuntu-22.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,15 +17,19 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y cmake gcc-aarch64-linux-gnu git
-      - name: Build
+
+      - name: Build static box64
         run: |
           cmake -B build \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DARM_DYNAREC=ON \
-                -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc
+                -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+                -DSTATICBUILD=1 \
+                -DHAVE_TRACE=0
           cmake --build build -j$(nproc)
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: box64-linux-arm64
-          path: build/box64
+          name: box64-linux-arm64-static
+          path: build/*/box64   # 自动匹配 src/ 或 bin/ 下的 box64
