@@ -10,15 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-22.04-arm   # GitHub 公测 ARM 运行器
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y cmake gcc-aarch64-linux-gnu git
-
-      # 关键：静态构建 + 保留调试符号（体积大但可调）
       - name: Build static box64
         run: |
           cmake -B build \
@@ -27,13 +18,16 @@ jobs:
                 -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
                 -DSTATICBUILD=1 \
                 -DHAVE_TRACE=0 \
-                -DCMAKE_EXE_LINKER_FLAGS=""   # 去掉默认 -s，保留符号
-          cmake --build build -j$(nproc)
+                -DCMAKE_EXE_LINKER_FLAGS=""
+          cmake --build build -v -j$(nproc)
 
-      # 可选：再 strip 一个瘦身版供发布
+      - name: Check build result
+        run: |
+          find build -name box64 -type f -ls   # 列出所有 box64 路径
+
       - name: Strip copy
         run: |
-          cp build/box64 build/box64-stripped
+          cp $(find build -name box64 -type f) build/box64-stripped
           aarch64-linux-gnu-strip build/box64-stripped
 
       - name: Upload artifacts
@@ -41,5 +35,5 @@ jobs:
         with:
           name: box64-arm64-static
           path: |
-            build/box64            # 完整版（带符号，可调）
-            build/box64-stripped   # 瘦身版（无符号，分发）
+            build/*/box64
+            build/box64-stripped
